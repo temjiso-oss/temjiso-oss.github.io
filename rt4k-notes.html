@@ -390,6 +390,97 @@
 </table></div>
 <p>この設定で、「7.500x 288→2160」「3.750x 896→3360」と表示されます。ゲームの1ドットが、横も縦も 15 画素の正方形になり、4K の高さいっぱいに映ります。</p>
 <p>ADC と Color Correction の値が大きいのは、TVスワンの RGB 出力に、黒の基準になる部分が無く、そのままでは暗く映るためです。くわしくは、<a href="tvswan-rgb.html">詳しい記録</a>に書いています。</p>
+<h2>設定例：TVスワン（RGB、4K、縦画面のゲーム）</h2>
+<p>TVスワンは、縦に持って遊ぶゲームを自分で見分けて、<strong>縦向きの絵を出します</strong>。RT4K の「RoTATE」は、Off のままで大丈夫です。左右には、WonderSwan Color の飾りが出ます。</p>
+<p>ただし、横画面用の設定のままだと、次の2つが起きました。</p>
+<ul>
+<li><strong>上下がはみ出す。</strong> 縦画面では、ゲームの縦が 224 ドット（448 行）になります。横画面用の切り取りは 288 行ぶんなので、上下が切れます。</li>
+<li><strong>全体が白っぽくなる。</strong> 明るさの基準にしている「画面の外側の白い枠」が、縦画面では違う絵がらになるためです。黒が灰色まで持ち上がります。</li>
+</ul>
+<p>そこで、縦画面用のプロファイルを別に作りました。上の「RGB、4K」の設定から、変えた所だけを書きます。</p>
+<div class="table"><table>
+<thead>
+<tr>
+<th>ページ</th>
+<th>項目</th>
+<th>横画面用</th>
+<th>縦画面用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>RGB/Component ADC</td>
+<td>Offset R／G／B</td>
+<td>+100</td>
+<td><strong>+58</strong></td>
+</tr>
+<tr>
+<td>Color Correction</td>
+<td>Input Lift</td>
+<td>−0.72</td>
+<td><strong>−0.88</strong></td>
+</tr>
+<tr>
+<td></td>
+<td>Input Gain</td>
+<td>3.45</td>
+<td><strong>4.15</strong></td>
+</tr>
+<tr>
+<td>Scaling/Crop</td>
+<td>Top／Bottom Trim</td>
+<td>−47／−49</td>
+<td><strong>−7／−9</strong></td>
+</tr>
+<tr>
+<td></td>
+<td>Left／Right Trim</td>
+<td>−218／−195</td>
+<td><strong>−366／−367</strong>（左右の飾りを消す）</td>
+</tr>
+<tr>
+<td></td>
+<td>Vert. Factor</td>
+<td>7.500</td>
+<td><strong>4.500</strong></td>
+</tr>
+<tr>
+<td>Processing/Effects</td>
+<td>Scanline</td>
+<td>LCD Mono 1</td>
+<td><strong>Off</strong>（Kernel は縦横とも Nearest Neighbor）</td>
+</tr>
+<tr>
+<td></td>
+<td>Mask</td>
+<td>Off</td>
+<td><strong>Multiply</strong>、下の 9 画素用のマスク（RGB の方）、Strength −8</td>
+</tr>
+</tbody>
+</table></div>
+<p>この設定で、「4.500x 448→2016」「2.250x 576→1296」と表示されます。ゲームの1ドットが 9×9 画素になり、上下に細い黒い帯が付きます（2160÷224 は約 9.6 なので、はみ出さない一番大きい整数倍が 9 です）。</p>
+<p>左右の飾りを残したいときは、Left／Right Trim を横画面用と同じ −218／−195 のままにします（表示は「2.250x 896→2016」）。マスクは、どちらでも同じ物が使えます（ドットの位置が、ちょうどマスク 40 ますぶん動くだけなので）。</p>
+<p><strong>縦のゲームを遊ぶときは、プロファイルを切り替える</strong>事になります。</p>
+<p>明るさの合わせ方は、次の順でした。</p>
+<ol>
+<li>ADC の Offset を下げて、持ち上がった黒を下げる。</li>
+<li>Color Correction の Input Gain で、明るい色を上限の少し手前まで上げる。</li>
+<li>Gain を上げると黒も一緒に持ち上がるので、Input Lift を下げて、黒を締め直す。</li>
+</ol>
+<p>左右の飾りの地の色は、真っ白ではなく、ごく薄い灰色でした。ここを「白になるまで」上げると、上げすぎになります。黒い線が黒いか、赤や黄色がつぶれていないか、を目安にしました。</p>
+<h3>9 画素用のマスク（自作）</h3>
+<p>1ドットが 9 画素のとき、15 画素用のマスクは合いません。9 画素用は見つからなかったので、作りました。自由に使ってください。</p>
+<ul>
+<li><a href="assets/rt4k/WS_TATE_9x_RGB.bmp">WS_TATE_9x_RGB.bmp</a>：赤・緑・青の縦じまと、格子</li>
+<li><a href="assets/rt4k/WS_TATE_9x_GRID.bmp">WS_TATE_9x_GRID.bmp</a>：格子だけ（色は変えません）</li>
+</ul>
+<p>SD カードの <code>mask</code> フォルダーに入れて、Mask の「Load from File」で選びます。Strength は好みで合わせます（強いほど暗くなります。私は −8 です）。</p>
+<p>このマスクは、上の縦画面用の設定（4K 出力）に合わせて、模様の位置をずらしてあります。切り取りや倍率を変えると、格子がドットからずれる事があります。</p>
+<p>作るときに、つまずいた事が2つあります。自分でマスクを作る人は、気をつけてください。</p>
+<ul>
+<li><strong>RT4K は、マスクを画面の左端ちょうどからではなく、2 画素左から並べていました</strong>（縦は、上端ちょうどからでした）。最初に作った物は、そのぶんだけ横にずれて、ドットの中の色の並びが変わってしまいました。</li>
+<li><strong>ドットの縦の境目は、切り取りの上端から数えた位置には、ありませんでした。</strong> 5 画素（半行ぶん）下にずれていました。Bob が、1行おきの絵を半行ずらして並べるためだと思います。切り取りの数字から計算するのではなく、<strong>実寸で保存した画面で、絵の境目を測って合わせる</strong>のが確実でした。</li>
+</ul>
 <h2>設定例：TVスワン（S端子）</h2>
 <p>改造していない TVスワンを、S端子でつないだときの値です。1440p で出力していた頃の物で、4K では合わせ直していません。</p>
 <div class="table"><table>
