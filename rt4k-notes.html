@@ -1,0 +1,461 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RetroTINK 4K の覚え書き（設定でつまずいた所） | BW の倉庫</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header><a href="index.html">BW の倉庫</a></header>
+<main>
+<h1>RetroTINK 4K の覚え書き（設定でつまずいた所）</h1>
+<p>RetroTINK 4K（以下 RT4K）は、古いゲーム機の映像を、今のテレビやモニターにきれいに映すための機器です。とても高機能ですが、メニューは英語で、項目も多く、最初はどこを触れば良いのか分かりませんでした。</p>
+<p>このページは、私が TVスワンを映すために設定を詰めたときに、<strong>つまずいた所</strong>と、<strong>分かった事</strong>をまとめたものです。TVスワン以外の機器でも、同じ所でつまずくと思います。</p>
+<ul>
+<li>使った物：RetroTINK 4K Pro、ファームウェア 1.99.19（2026 年 11 月の試験版）</li>
+<li><strong>自分で試して確かめた事</strong>と、<strong>人から聞いた事・まだ試していない事</strong>は、分けて書いています。</li>
+<li>ファームウェアが変わると、項目の名前や動きが変わる事があります。</li>
+</ul>
+<p>関連する記事：<a href="tvswan-rgb-guide.html">TVスワンを RGB で映す</a></p>
+<h2>いちばん大事な事：自分の設定を、消さないために</h2>
+<p>設定のひとまとまりを「プロファイル」と呼びます。プロファイルは、SD カードの中に、ファイルとして保存されます。</p>
+<p><strong>私は、詰めた設定を、一度全部失いました。</strong> 原因は、配布されているプロファイルを入れ直す作業でした。</p>
+<p>Wobbling Pixels さんのプロファイルは、とても良くできていて、私も土台として使っています。新しい版に入れ替えるときの説明書には、「SD カードの中を『Wobbling Pixels』で検索して、出てきた物を全部消してから、新しい物を入れる」と書いてあります。その通りに作業したところ、<strong>よけておいたつもりの自分のプロファイルまで、一緒に消えてしまいました。</strong></p>
+<p>私は、プロファイルの名前は、自分の物に変えていました。しかし、保存した場所が、配布されたフォルダーの中のままでした。検索で出てくるのは、名前に「Wobbling Pixels」と付いた<strong>フォルダー</strong>です。そのフォルダーを消したので、中に入っていた自分のプロファイルも、一緒に消えました。<strong>名前を変えただけでは、守れません。</strong></p>
+<ul>
+<li>自分のプロファイルは、<strong>自分用のフォルダー</strong>を作って、そこに保存する。配布されたフォルダーの中には置かない。</li>
+<li>配布されたプロファイルを入れ替える前に、<strong>SD カードの <code>profile</code> フォルダーを、丸ごとパソコンに写しておく</strong>。</li>
+<li>設定を詰めたら、その場で保存する（メインメニューの「Save Current Profile」）。保存したら、読み込みの一覧（「Manage Profiles」）に、その名前が<strong>実際に出てくるか</strong>を確かめる。</li>
+<li>試している途中の設定は、<strong>別の名前</strong>で保存する。良い状態の物を、上書きしない。</li>
+<li>念のため、値をメモに控えておく。私は、控えがあったので、手で入れ直せました。</li>
+</ul>
+<p>なお、ファームウェアの更新では、私の環境では、いまのところプロファイルが消えた事はありません。</p>
+<h2>メニューの地図</h2>
+<p>設定は、メインメニューの「Advanced Settings」の中に、ページごとに分かれています。私が使ったページは、次の通りです。</p>
+<div class="table"><table>
+<thead>
+<tr>
+<th>ページ</th>
+<th>何を決める所か</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Input Source</td>
+<td>どの端子から、どの信号で受けるか</td>
+</tr>
+<tr>
+<td>HDMI Output</td>
+<td>出力の解像度（4K60、1440p60 など）</td>
+</tr>
+<tr>
+<td>RGB/Component ADC</td>
+<td>アナログ映像の取り込み方（細かさ、明るさの幅）</td>
+</tr>
+<tr>
+<td>SDP Decoder</td>
+<td>S端子・コンポジットの色の取り出し方</td>
+</tr>
+<tr>
+<td>Color Correction</td>
+<td>明るさ・黒の締まり・色の濃さ</td>
+</tr>
+<tr>
+<td>Deinterlacer/Film</td>
+<td>インターレース（480i）の映像の扱い</td>
+</tr>
+<tr>
+<td>Scaling/Crop</td>
+<td>切り取りと、拡大の倍率</td>
+</tr>
+<tr>
+<td>Processing/Effects</td>
+<td>拡大のぼかし方、スキャンライン、液晶風、マスク</td>
+</tr>
+<tr>
+<td>Black Frame Insertion</td>
+<td>黒いコマを挟んで、動きをくっきり見せる機能</td>
+</tr>
+</tbody>
+</table></div>
+<p>どのページでも、画面の下に、<strong>いま読み込んでいるプロファイルの名前</strong>と、<strong>検出された信号の種類</strong>（「CP 480i」など）が出ます。迷ったら、ここを見ます。</p>
+<h2>設定する順番</h2>
+<p>RT4K の設定は、<strong>前の設定が、後の設定の土台</strong>になっています。順番を間違えると、合わせた所が崩れて、何度もメニューを行き来する事になります。私は、次の順番で進めると、やり直しが少なく済みました。</p>
+<p>始める前に、ゲームを、<strong>動かない、明るい所と暗い所の両方がある画面</strong>にしておきます。タイトル画面やメニュー画面が向いています。</p>
+<div class="table"><table>
+<thead>
+<tr>
+<th>順</th>
+<th>ページ</th>
+<th>する事</th>
+<th>先に決める理由</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Input Source</td>
+<td>端子と信号の種類を選ぶ</td>
+<td>絵が出ないと、何も合わせられない</td>
+</tr>
+<tr>
+<td>2</td>
+<td>HDMI Output</td>
+<td>出力の解像度を決める。キャプチャーソフトも同じにする</td>
+<td>解像度を変えると、倍率が全部変わる</td>
+</tr>
+<tr>
+<td>3</td>
+<td>RGB/Component ADC</td>
+<td>Samples per Line を決めて、Auto Phase を実行</td>
+<td>これを変えると、横の切り取りがずれる</td>
+</tr>
+<tr>
+<td>4</td>
+<td>RGB/Component ADC</td>
+<td>Gain／Offset で、取り込みの幅を合わせる</td>
+<td>ここが暗いままだと、次の色の調整が合わない</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Color Correction</td>
+<td>Input Gain／Input Lift で、明るさと黒を合わせる</td>
+<td>絵がはっきり見えないと、切り取りの端が分からない</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Deinterlacer/Film</td>
+<td>Bob か Motion Adaptive かを決める</td>
+<td>絵が上下に揺れていると、切り取りを合わせにくい</td>
+</tr>
+<tr>
+<td>7</td>
+<td>Scaling/Crop</td>
+<td>上下の切り取り → 左右の切り取り → Scaling Mode</td>
+<td>切り取りで、倍率が決まる</td>
+</tr>
+<tr>
+<td>8</td>
+<td>Processing/Effects</td>
+<td>スキャンライン、液晶風、マスク</td>
+<td>倍率が決まってからでないと、網目の大きさが合わない</td>
+</tr>
+<tr>
+<td>9</td>
+<td>Color Correction</td>
+<td>効果で暗くなった分を、少しだけ足す</td>
+<td>効果を入れると、明るさが変わる</td>
+</tr>
+<tr>
+<td>10</td>
+<td>メインメニュー</td>
+<td>自分用のフォルダーに、保存する</td>
+<td>—</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>後から変えると、やり直しになる組み合わせ</strong>も、覚えておくと助かります。</p>
+<div class="table"><table>
+<thead>
+<tr>
+<th>これを変えると</th>
+<th>これが、やり直しになる</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>出力の解像度（手順 2）</td>
+<td>倍率（手順 7）、効果の強さ（手順 8）</td>
+</tr>
+<tr>
+<td>Samples per Line（手順 3）</td>
+<td>左右の切り取り（手順 7）、Auto Phase</td>
+</tr>
+<tr>
+<td>切り取り（手順 7）</td>
+<td>倍率。マスクを使っていれば、網目の位置</td>
+</tr>
+<tr>
+<td>スキャンラインやマスクの強さ（手順 8）</td>
+<td>明るさ（手順 9）</td>
+</tr>
+</tbody>
+</table></div>
+<p>切りの良い所まで進んだら、そのつど、試し用の名前で保存しておくと安心です。途中で分からなくなっても、そこまで戻れます。</p>
+<h2>つまずいた所</h2>
+<h3>1. モニターが 4K なら、RT4K から 4K で出す</h3>
+<p>私は最初、1440p で出力していました。4K のモニターにつなぐと、モニターの側が 1.5 倍に引き伸ばすので、ドットの輪郭が少しぼけます。RT4K から 4K60 で出すと、このぼけが無くなりました。</p>
+<p>1ドットに使える画素が増えるので、液晶風の表示も、細かく描かれるようになります。</p>
+<h3>2. キャプチャーソフトの設定を、RT4K の出力と合わせる</h3>
+<p>キャプチャーソフトの録画設定が、1080p・30 コマになっていた事がありました。RT4K がいくらきれいに出しても、取り込む側が粗ければ、ぼけた絵になります。<strong>設定を見比べるときは、まずここを疑う</strong>のが近道でした。</p>
+<p>RT4K の出力を変えたら、キャプチャーソフトの解像度とコマ数も、同じにします。</p>
+<h3>3. 切り取り（Trim）の1目盛りは、1行とは限らない</h3>
+<p>Scaling/Crop の Top Trim／Bottom Trim で、上下を切り取れます。480i の映像では、<strong>1目盛りで2行</strong>動きました。「あと 10 行切りたい」と思って 10 動かすと、20 行切れます。</p>
+<p>Left Trim／Right Trim は、取り込みの1個ぶんずつ動きます。</p>
+<h3>4. Scaling Mode は、名前が似ていて、動きが違う</h3>
+<p>拡大の倍率の決め方です。ここが一番分かりにくい所でした。</p>
+<div class="table"><table>
+<thead>
+<tr>
+<th>名前</th>
+<th>動き</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Auto Fill</td>
+<td>画面の高さいっぱいに拡大（倍率は半端になる）</td>
+</tr>
+<tr>
+<td>Auto Fill Int</td>
+<td><strong>はみ出さない方</strong>の整数倍</td>
+</tr>
+<tr>
+<td>Auto Fill Int+</td>
+<td><strong>はみ出す方</strong>の整数倍（はみ出した分は、画面の外に切れる）</td>
+</tr>
+<tr>
+<td>Auto Fill Int HV／HV+</td>
+<td>横も整数倍にする</td>
+</tr>
+<tr>
+<td>Proportional</td>
+<td>縦の倍率を、自分で数字で決める</td>
+</tr>
+<tr>
+<td>Free-Form</td>
+<td>縦と横を、別々に決める</td>
+</tr>
+</tbody>
+</table></div>
+<p>ドット絵をくっきり映すには、整数倍が基本です。ただし、「Int+」は、切り取りを少し変えただけで倍率が1段跳ねて、絵が急に大きくなります。私はこれで何度も混乱しました。<strong>いまの倍率は、Scaling Mode のすぐ下の行に「7x 288→2016」のように出る</strong>ので、数字を見ながら合わせます。</p>
+<h3>5. 切り取った所に、色の帯が出る</h3>
+<p>Scaling/Crop の「Masking Color」は、切り取った部分を塗る色です。ここに数字が残っていると、絵の左右に、青や赤の帯が出ます。<strong>3つとも 0 にすると、黒</strong>になります。</p>
+<p>逆に、切り取りの位置を合わせるときは、わざと色を付けると、どこまで切れているかが見やすくなります。</p>
+<h3>6. Bob と Motion Adaptive</h3>
+<p>Deinterlacer/Film の Algorithm は、480i の映像を、どうやって1枚の絵にするかの設定です。</p>
+<ul>
+<li><strong>Bob</strong>：届いた絵を、1回ごとにそのまま映す。</li>
+<li><strong>Motion Adaptive</strong>：前後の絵を見比べて、動いている所を作り直す。テレビ放送のような映像向け。</li>
+</ul>
+<p>古いゲーム機の映像には、Bob が合う事が多いです。TVスワンでは、Bob にすると、速い動きのカクつきが無くなりました。</p>
+<p>ただし、ファームウェア 1.99.12 では、Bob にすると、数秒おきに絵が1ドット上下に動きました。そのときは Motion Adaptive で避けていました。1.99.19 に更新したら、Bob でも動かなくなりました。<strong>ファームウェアで動きが変わる事がある</strong>ので、うまくいかない設定は、更新のあとに試し直す価値があります。</p>
+<h3>7. 明るさは、2か所で決まる</h3>
+<p>映像が暗い、白っぽい、というときに触る所は、2つあります。順番があります。</p>
+<p><strong>先に、RGB/Component ADC（取り込みの幅）</strong></p>
+<ul>
+<li>Gain：信号の幅を広げる。横に「Rmax: 111」のように、いま届いている最大の値が出る。</li>
+<li>Offset：全体を上下にずらす。</li>
+<li>Pre-ADC：取り込む前の、大まかな強さ。</li>
+</ul>
+<p><strong>次に、Color Correction（見た目の仕上げ）</strong></p>
+<ul>
+<li>Input Gain：全体を明るくする。</li>
+<li>Input Lift：黒を締める（マイナスにすると、暗い所が黒に近づく）。</li>
+<li>Saturation：色の濃さ。</li>
+</ul>
+<p>私が試した範囲では、Color Correction は「出力＝入力×Gain＋Lift」という形で働きました。Gain を上げて、Lift を下げる、という組み合わせで、薄くて灰色っぽい絵が、締まった絵になりました。Lift は、−0.97 あたりが下限でした。</p>
+<p>上げすぎると、白い文字や明るい所がつぶれます。白い文字がにじまずに読めるかを見ながら、少しずつ動かします。</p>
+<h3>8. 横の細かさ：Samples per Line と Auto Phase</h3>
+<p>RGB/Component ADC の「Samples per Line」は、横1行を、何個に区切って取り込むかの値です。機器が出しているドットの速さの、ちょうど整数倍に合わせると、ドットの縦の境目が締まります。</p>
+<p>TVスワンは、横1行が約 390 ドットぶんです。初めの値の 1716 だと、1ドットが 4.4 個になり、半端です。<strong>1560（390×4）にして、Auto Phase を実行</strong>すると、境目がそろいました。</p>
+<figure><img src="assets/rt4k/samples-1560-vs-1716.png" alt="左が 1560、右が 1716。右は、色の境目に、混ざった色の列が入っている" loading="lazy"><figcaption>左が 1560、右が 1716。右は、色の境目に、混ざった色の列が入っている</figcaption></figure>
+<p>気をつける点が3つあります。</p>
+<ul>
+<li>この値を変えると、横の切り取り（Left Trim／Right Trim）も、合わせ直しになります。</li>
+<li>「Auto Phase」は、値を変えたあとに実行します。取り込む位置を、境目を避けた所に合わせてくれます。</li>
+<li><strong>S端子では、同じ事をすると、かえってにじみました。</strong> 効いたのは RGB のときだけです。S端子では、元の 1716 のままが一番きれいでした。</li>
+</ul>
+<h3>9. Vert. Pre-Scale は、480i には効かなかった</h3>
+<p>Scaling/Crop に「Vert. Pre-Scale」という項目があります。行を間引く機能です。TVスワンは同じ行を2回ずつ出すので、半分に間引けば、本来の行数になると考えました。しかし、1/2 にしても、何も変わりませんでした。解像度の高い映像のための機能のようです。</p>
+<h3>10. 液晶風の表示は、強くすると暗くなる</h3>
+<p>Processing/Effects の Scanline の Function に、「LCD Mono 1」などの液晶風の表示があります。ドットのあいだに、暗いすき間を描きます。</p>
+<ul>
+<li>強さ（LCD Subpixel Str.／LCD Vert Str.）を上げるほど、液晶らしくなり、暗くなります。</li>
+<li>4K にすると、すき間がはっきり描かれるので、同じ強さでも暗く感じました。私は、30 から 15 に下げました。</li>
+<li>足りない明るさは、Color Correction の Input Gain を少し上げて補いました。</li>
+</ul>
+<h3>11. マスクで、1ドットを1ますの液晶にする</h3>
+<p>同じページの Mask は、画像を重ねて、液晶やブラウン管の網目を再現する機能です。「Load from File」で、SD カードの画像を選びます。</p>
+<p>Wobbling Pixels さんが配っているゲームボーイカラー用のマスク（15×15 画素）を、TVスワンに使ってみました。ワンダースワンは、縦の行数がゲームボーイと同じ 144 行です。4K で、1ドットをちょうど 15×15 画素にしたところ、<strong>マスクのますが、ドットとぴったり重なりました。</strong></p>
+<ul>
+<li>使うときは、Scanline の Function を Off にして、Vert. Kernel／Hori. Kernel を Nearest Neighbor にします。</li>
+<li>Strength は、0 だと網目が強く、色も少し変わって見えました。私は −8 にしました。</li>
+<li>1ドットが、マスクの大きさの整数倍になっていないと、網目とドットがずれて、ざらついた絵になります。</li>
+</ul>
+<h3>12. そのほか</h3>
+<ul>
+<li><strong>Wide Tolerance</strong>（RGB/Component ADC の Sync の所）を On にしたら、TVスワンは映らなくなりました。同期の弱い機器のための設定ですが、合わない事もあります。</li>
+<li><strong>Black Frame Insertion</strong> の項目は、60Hz の出力では「N/A」と出て、選べませんでした。120Hz の出力が要るようです（私は、まだ試していません）。</li>
+</ul>
+<h2>人から聞いた事・まだ試していない事</h2>
+<ul>
+<li>Enhanced S-Video（S端子を HD-15 端子から入れる方式）では、SDP Decoder の Brightness・Contrast は効かず、明るさは ADC の Gain で合わせる、との事です（海外の wiki の記述）。私の環境でも、Gain で合わせました。</li>
+<li>ファームウェア 1.99.9 から、RT4K 本体で画面を PNG に保存できる、との事です（更新履歴の記述）。私は、まだ使っていません。</li>
+<li>Wobbling Pixels さんは、機種ごとのプロファイルをたくさん配っています。中の値は、RT4K に読み込んで、画面で見る事ができます。</li>
+</ul>
+<h2>設定例：TVスワン（RGB、4K）</h2>
+<p>私が、いま使っている値です。TVスワンを RGB 出力にする方法は、<a href="tvswan-rgb-guide.html">別の記事</a>に書いています。機器の個体や、ケーブルによって、合う値は変わります。出発点として使ってください。</p>
+<div class="table"><table>
+<thead>
+<tr>
+<th>ページ</th>
+<th>項目</th>
+<th>値</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Input Source</td>
+<td></td>
+<td>HD15／RGsB</td>
+</tr>
+<tr>
+<td>HDMI Output</td>
+<td></td>
+<td>4K60</td>
+</tr>
+<tr>
+<td>RGB/Component ADC</td>
+<td>Samples per Line</td>
+<td>1560</td>
+</tr>
+<tr>
+<td></td>
+<td>Sub-Phase</td>
+<td>Auto Phase を実行（私の環境では 168.75 deg）</td>
+</tr>
+<tr>
+<td></td>
+<td>Pre-ADC</td>
+<td>−0.7</td>
+</tr>
+<tr>
+<td></td>
+<td>Gain R／G／B</td>
+<td>1.887／1.887／1.906</td>
+</tr>
+<tr>
+<td></td>
+<td>Offset R／G／B</td>
+<td>+100</td>
+</tr>
+<tr>
+<td>Color Correction</td>
+<td>Input Lift</td>
+<td>−0.72</td>
+</tr>
+<tr>
+<td></td>
+<td>Input Gain</td>
+<td>3.45</td>
+</tr>
+<tr>
+<td></td>
+<td>Saturation</td>
+<td>+0.20</td>
+</tr>
+<tr>
+<td>Deinterlacer/Film</td>
+<td>Algorithm</td>
+<td>Bob、Offset −1</td>
+</tr>
+<tr>
+<td>Scaling/Crop</td>
+<td>Top／Bottom Trim</td>
+<td>−47／−49</td>
+</tr>
+<tr>
+<td></td>
+<td>Left／Right Trim</td>
+<td>−218／−195</td>
+</tr>
+<tr>
+<td></td>
+<td>Scaling Mode</td>
+<td>Proportional、Vert. Factor 7.500</td>
+</tr>
+<tr>
+<td></td>
+<td>Masking Color</td>
+<td>0／0／0</td>
+</tr>
+<tr>
+<td>Processing/Effects</td>
+<td>Scanline</td>
+<td>LCD Mono 1、強さ 15／15、Normalize Energy On</td>
+</tr>
+</tbody>
+</table></div>
+<p>この設定で、「7.500x 288→2160」「3.750x 896→3360」と表示されます。ゲームの1ドットが、横も縦も 15 画素の正方形になり、4K の高さいっぱいに映ります。</p>
+<p>ADC と Color Correction の値が大きいのは、TVスワンの RGB 出力に、黒の基準になる部分が無く、そのままでは暗く映るためです。くわしくは、<a href="tvswan-rgb.html">詳しい記録</a>に書いています。</p>
+<h2>設定例：TVスワン（S端子）</h2>
+<p>改造していない TVスワンを、S端子でつないだときの値です。1440p で出力していた頃の物で、4K では合わせ直していません。</p>
+<div class="table"><table>
+<thead>
+<tr>
+<th>ページ</th>
+<th>項目</th>
+<th>値</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Input Source</td>
+<td></td>
+<td>HD15／YC-Enh（Enhanced S-Video）</td>
+</tr>
+<tr>
+<td>RGB/Component ADC</td>
+<td>Samples per Line</td>
+<td>1716（元のまま）</td>
+</tr>
+<tr>
+<td></td>
+<td>Pre-ADC</td>
+<td>+0.8</td>
+</tr>
+<tr>
+<td></td>
+<td>Gain G/Y</td>
+<td>1.645</td>
+</tr>
+<tr>
+<td>SDP Decoder</td>
+<td>Chroma</td>
+<td>+10</td>
+</tr>
+<tr>
+<td></td>
+<td>CTIE</td>
+<td>3</td>
+</tr>
+<tr>
+<td>Deinterlacer/Film</td>
+<td>Algorithm</td>
+<td>Bob、Offset −1</td>
+</tr>
+<tr>
+<td>Scaling/Crop</td>
+<td>Top／Bottom Trim</td>
+<td>−38／−34</td>
+</tr>
+<tr>
+<td></td>
+<td>Left／Right Trim</td>
+<td>−203／−218</td>
+</tr>
+<tr>
+<td></td>
+<td>Scaling Mode</td>
+<td>Auto Fill Int+（1440p で縦5倍）</td>
+</tr>
+</tbody>
+</table></div>
+<hr />
+<p>間違いや、もっと良い設定をご存じの方は、ぜひ教えてください（X：<a href="https://x.com/TEMJISO">@TEMJISO</a>）。</p>
+</main>
+<footer>© BW</footer>
+</body>
+</html>

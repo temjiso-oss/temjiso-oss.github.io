@@ -1,0 +1,537 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TVスワンを RGB 出力にする（基板の解析と改造の記録） | BW の倉庫</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header><a href="index.html">BW の倉庫</a></header>
+<main>
+<h1>TVスワンを RGB 出力にする（基板の解析と改造の記録）</h1>
+<figure><img src="assets/tvswan-rgb/cmp-lcd-greenhair.png" alt="S端子と RGB の比較（液晶風の表示効果あり）。左が S端子、右が RGB" loading="lazy"><figcaption>S端子と RGB の比較（液晶風の表示効果あり）。左が S端子、右が RGB</figcaption></figure>
+<blockquote>
+<p>はじめての人は、先に<a href="tvswan-rgb-guide.html">やさしい案内</a>をどうぞ。このページは、自分で作業する人、作業を引き受ける人のための、詳しい記録です。</p>
+</blockquote>
+<p>バンダイの「TVスワン」は、ワンダースワンカラーの映像をテレビに映すための機器です。出力はコンポジットと S端子だけですが、基板に載っている映像エンコーダー IC は、もともと RGB 出力に対応しています。この記事は、その機能を使って RGB で映すまでの記録です。</p>
+<p>同じことに挑戦する人が、遠回りをせずに済むように、分かったこと、つまずいた所、必要な物をまとめます。</p>
+<p><strong>先に結論</strong></p>
+<ul>
+<li>RGB 出力は可能です。基板の改造は、チップ抵抗1個の交換と、線3本の追加だけです。</li>
+<li>小さなマイコン（Raspberry Pi Pico）で、エンコーダーの設定を書き換えます。</li>
+<li>映像は、既存の S端子と黄色の RCA 端子から、そのまま RGB として出ます。</li>
+<li>ただし、出てくる信号に癖があり、受け側（この記事では RetroTINK 4K）の設定で補う必要があります。</li>
+<li>画質の差は「色の境目がにじまなくなる」ことです。白黒の輪郭は、S端子とほとんど変わりません。</li>
+</ul>
+<p><strong>改造を考えている人、依頼する人へ：先に知っておいてほしいこと</strong></p>
+<blockquote>
+<p><strong>この改造をした TVスワンは、どの機器につないでも正しく映るわけではありません。</strong>
+RGB で出てくる信号は、黒の基準がずれています（6 章）。筆者は、RetroTINK 4K の設定でこれを打ち消して、正しく映しています。黒レベルを細かく調整できない機器（ほかのアップスケーラーや、RGB 対応のモニターなど）では、暗く映る可能性が高いです。ほかの機器での映り方は、確かめていません。</p>
+<p>基板の作業が正しくできても、手元の機器によっては、きれいに映らないことがあります。</p>
+</blockquote>
+<p><strong>お断り</strong></p>
+<ul>
+<li>貴重な機器への改造です。作業は自己責任でお願いします。</li>
+<li>確認したのは、基板 <code>552KA1401-R30 REVISION:6.0</code> の1台と、RetroTINK 4K Pro（ファームウェア 1.99.12）の組み合わせだけです。ほかの基板の版や、ほかの機器で同じ結果になるかは、確かめていません。</li>
+</ul>
+<hr />
+<h2>1. TVスワンの中身</h2>
+<div class="table"><table>
+<thead>
+<tr>
+<th>部品</th>
+<th>型番</th>
+<th>役割</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>本体 LSI</td>
+<td>BANDAI SPGY-1002 SPHINX</td>
+<td>ワンダースワンカラーの LSI そのもの</td>
+</tr>
+<tr>
+<td>FPGA</td>
+<td>Altera FLEX EPF10K30AQC208-3</td>
+<td>液晶用の信号を受けて、テレビ用のタイミングに作り直す</td>
+</tr>
+<tr>
+<td>映像用メモリー</td>
+<td>日立 HM534251BJ-7 ×3</td>
+<td>1画素 12 ビット（4096 色）を1画面ぶん溜める</td>
+</tr>
+<tr>
+<td>映像エンコーダー</td>
+<td>OKI MSM7654</td>
+<td>デジタル映像をアナログ（コンポジット／S端子／RGB）に変える</td>
+</tr>
+<tr>
+<td>発振器</td>
+<td>24.5454 MHz</td>
+<td>画素クロック 12.27 MHz（1ライン 780 画素）</td>
+</tr>
+<tr>
+<td>制御マイコン</td>
+<td>日立 HD64F3337YF（H8/3337）</td>
+<td>全体の制御</td>
+</tr>
+<tr>
+<td>音声 DAC</td>
+<td>ローム BU9480F</td>
+<td>音をデジタルで取り出してアナログにする</td>
+</tr>
+<tr>
+<td>VR1</td>
+<td>半固定抵抗</td>
+<td>エンコーダーの出力レベル（FS 端子）の調整</td>
+</tr>
+</tbody>
+</table></div>
+<p>映像の流れは、次のとおりです。</p>
+<ol>
+<li>本体 LSI が、液晶用の映像（224×144、約 75.47Hz）を出す</li>
+<li>FPGA が、それを映像用メモリーに書き込み、テレビのタイミング（59.94Hz）で読み出す</li>
+<li>FPGA からエンコーダーへ、<strong>赤・緑・青を4ビットずつ</strong>渡す</li>
+<li>エンコーダーがアナログ信号にして、端子へ出す</li>
+</ol>
+<p>ここから分かることが2つあります。</p>
+<ul>
+<li>色は、エンコーダーに入るまで、ワンダースワンカラーの 4096 色のままです。S端子のにじみは、最後のアナログ変換で生じています。</li>
+<li>出力は 480i ですが、1フィールドにスワンの 144 ラインが 1:1 で入っています。中身は、実質 240p です。</li>
+</ul>
+<p>なお、約 75Hz を約 60Hz に変換しているので、スクロール中に絵が上下で食い違う（帯が入る）ことがあります。これは TVスワンの仕組みによるもので、RGB にしても直りません。</p>
+<h2>2. RGB で出せる理由</h2>
+<p>エンコーダー MSM7654 は、出力を「S端子とコンポジット」か「RGB」かで切り替えられます。RGB にすると、3本のアナログ出力の中身が入れ替わります。</p>
+<div class="table"><table>
+<thead>
+<tr>
+<th>IC のピン</th>
+<th>通常</th>
+<th>RGB のとき</th>
+<th>基板上の端子</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>62番 YA</td>
+<td>輝度（Y）</td>
+<td><strong>赤</strong></td>
+<td>S端子の Y</td>
+</tr>
+<tr>
+<td>60番 CVBSO</td>
+<td>コンポジット</td>
+<td><strong>緑</strong></td>
+<td>黄色の RCA</td>
+</tr>
+<tr>
+<td>58番 CA</td>
+<td>色（C）</td>
+<td><strong>青</strong></td>
+<td>S端子の C</td>
+</tr>
+</tbody>
+</table></div>
+<p>つまり、切り替えさえできれば、<strong>今ある端子からそのまま RGB が出ます。</strong> 出力回路は3系統とも同じ構成（抵抗、ダイオード、電解コンデンサーだけ）で、部品の交換は要りません。</p>
+<h3>ピンでは切り替わらない</h3>
+<p>IC には、切り替え用のピン（47番 OUTSEL）があります。このピンは基板上でどこにもつながっていませんが、<strong>3.3V を当てても切り替わりません。</strong></p>
+<p>理由は、基板が起動時に、I2C でエンコーダーへ設定を書き込んでいて、その中に「ピンの設定を無視して、レジスターの設定を使う」という指定が入っているためです。</p>
+<p>電源を入れて約3〜5秒後に、次の4つが1回だけ書き込まれます（I2C アドレスは 7 ビットで 0x44）。</p>
+<div class="table"><table>
+<thead>
+<tr>
+<th>レジスター</th>
+<th>値</th>
+<th>意味</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>MR0（0x00）</td>
+<td>0x96</td>
+<td>レジスターの設定を優先／RGB 入力／NTSC 12.27MHz</td>
+</tr>
+<tr>
+<td>MR1（0x01）</td>
+<td>0x08</td>
+<td>マスター動作／<strong>S端子・コンポジット出力</strong></td>
+</tr>
+<tr>
+<td>CR0（0x02）</td>
+<td>0x01</td>
+<td></td>
+</tr>
+<tr>
+<td>CR1（0x03）</td>
+<td>0x00</td>
+<td>輝度 100%</td>
+</tr>
+</tbody>
+</table></div>
+<p>RGB にするには、このあとで <strong>MR1 に 0x18</strong> を書きます（0x08 に、出力切り替えのビット4を足した値）。基板は書き直しをしないので、1回書けば、電源を切るまで RGB のままです。</p>
+<p>このエンコーダーのレジスターは、書き込み専用です。読み出せないので、上の値は、通信を横から記録して調べました。</p>
+<h2>3. 必要な物</h2>
+<div class="table"><table>
+<thead>
+<tr>
+<th>品物</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Raspberry Pi Pico（無印で可）</td>
+<td>エンコーダーの設定を書き換える</td>
+</tr>
+<tr>
+<td>チップ抵抗の代わりの 470Ω 抵抗 1本</td>
+<td>基板の R40 と交換する</td>
+</tr>
+<tr>
+<td>細い配線材（AWG28 前後）</td>
+<td>基板と Pico をつなぐ</td>
+</tr>
+<tr>
+<td>ショットキーダイオード（1N5819 など）</td>
+<td>Pico の電源を基板から取る場合</td>
+</tr>
+<tr>
+<td>HD15（VGA）オスの端子台、S端子ケーブル、RCA ケーブル</td>
+<td>RGB 用のケーブルを作る</td>
+</tr>
+<tr>
+<td>はんだごて、フラックス、テスター、無水エタノール</td>
+<td>作業と確認</td>
+</tr>
+</tbody>
+</table></div>
+<p>受け側の機器は、<strong>緑の信号に重ねた同期（シンク・オン・グリーン）を受けられて、黒レベルとゲインを細かく調整できる物</strong>が必要です（理由は 6 章）。</p>
+<h2>4. 基板の改造</h2>
+<h3>4.1 R40 を 470Ω に交換する</h3>
+<p>Pico が I2C に割り込むには、通信の2本の線（SDA と SCL）を、Pico 側から Low に引ける必要があります。ところが、SCL は基板側が強く駆動していて、そのままでは引けません。</p>
+<p>SCL の途中にある直列抵抗 <strong>R40（22Ω）を、470Ω に交換</strong>します。これで、基板自身の通信はそのまま通り、Pico も線を引けるようになります。</p>
+<ul>
+<li>基板のチップ抵抗の「220」という印字は、220Ω ではなく <strong>22Ω</strong> です（「22 に 0 を 0 個」の意味）。</li>
+<li>交換する前に、テスターで R40 の両端が約 22Ω であることを確かめてください。</li>
+</ul>
+<h3>4.2 線を3本つなぐ</h3>
+<div class="table"><table>
+<thead>
+<tr>
+<th>信号</th>
+<th>基板側</th>
+<th>Pico 側</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>SDA</td>
+<td>R38 の IC 側のパッド</td>
+<td>GP0</td>
+</tr>
+<tr>
+<td>SCL</td>
+<td>R37 の IC 側のパッド（R40 の IC 側と同じ線）</td>
+<td>GP1</td>
+</tr>
+<tr>
+<td>GND</td>
+<td>近くの GND</td>
+<td>GND</td>
+</tr>
+</tbody>
+</table></div>
+<p>IC の細いピンに直接はんだ付けする必要はありません。相手は、すべて抵抗のパッドです。</p>
+<figure><img src="assets/tvswan-rgb/board-points.jpg" alt="エンコーダー（左の黒い IC）の右側。改造後の状態" loading="lazy"><figcaption>エンコーダー（左の黒い IC）の右側。改造後の状態</figcaption></figure>
+<div class="table"><table>
+<thead>
+<tr>
+<th>写真の番号</th>
+<th>場所</th>
+<th>やること</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>①</td>
+<td>R40</td>
+<td>チップ抵抗（22Ω）を外し、同じ位置に 470Ω を入れる。写真では、足つきの抵抗を、R40 の右のパッドと、②のパッドのあいだにつないでいる（R40 の左のパッドと②は、基板の上でつながっている）</td>
+</tr>
+<tr>
+<td>②</td>
+<td>R37 の IC 側のパッド</td>
+<td>SCL。Pico の GP1 へ（黄色の線）</td>
+</tr>
+<tr>
+<td>③</td>
+<td>R38 の IC 側のパッド</td>
+<td>SDA。Pico の GP0 へ（緑の線）</td>
+</tr>
+<tr>
+<td>④</td>
+<td>R41 の IC 側のパッド</td>
+<td>同期信号（CSYNC）。同期を緑に重ねる方式なら、使わない</td>
+</tr>
+</tbody>
+</table></div>
+<p>R37 と R38（印字「472」）は、通信線を 3.3V に引き上げる 4.7kΩ の抵抗です。R39 と R40（印字「220」）が、通信線の途中に入っている 22Ω の抵抗です。</p>
+<h3>4.3 つまずいた所</h3>
+<p>実際に時間を取られたのは、解析よりも、はんだ付けの不具合でした。</p>
+<ul>
+<li><strong>焦げた熱収縮チューブは、電気を通します。</strong> こての熱で焦げたチューブが炭になり、隣のパッドとのあいだで、数百Ωの漏れを作りました。症状は「通信が、通ったり通らなかったりする」「絵が白黒になる」などで、原因が分かりにくいです。チューブは、はんだ付けの前に縮めておき、こてを当てる時間を短くしてください。漏れが疑わしいときは、無水エタノールと爪楊枝で、パッドのあいだを掃除します。</li>
+<li><strong>導通チェックの「ピー」は、数百Ωの漏れでは鳴りません。</strong> 抵抗値で測ってください。正常な状態では、SDA と SCL のあいだは約 8.4kΩ でした。</li>
+<li><strong>細い線は、動かすたびに根元で外れかけます。</strong> 線は、はんだ付けの近くでテープなどで固定します。</li>
+<li><strong>Pico に電源が入っていない状態で、TVスワンを起動しない。</strong> つないだ線が通信を邪魔して、初期設定が届かなくなります。先に Pico、あとから TVスワンの順です。</li>
+<li><strong>45番ピン（TENB）には触れない。</strong> テスト用のピンで、電圧を当てると映像が消えます。</li>
+</ul>
+<h2>5. Pico のプログラム</h2>
+<p>MicroPython で動かしています。やることは単純です。</p>
+<ol>
+<li>TVスワンの電源が入るのを待つ（通信線が High になる）</li>
+<li>基板の初期設定の通信が終わるのを待つ</li>
+<li>次の2つを書く</li>
+</ol>
+<pre><code>CR0 (0x02) = 0x41   # 緑の信号に、同期を重ねる
+MR1 (0x01) = 0x18   # RGB 出力にする
+</code></pre>
+<p>元に戻すときは、MR1 に 0x08、CR0 に 0x01 を書きます。TVスワンの電源を入れ直しても、元に戻ります。</p>
+<p>プログラムは、次の2つのファイルです。Pico に MicroPython を入れて、この2つを中にコピーすると、電源が入るたびに自動で動きます。</p>
+<ul>
+<li><a href="assets/tvswan-rgb/pico/main.py">main.py</a></li>
+<li><a href="assets/tvswan-rgb/pico/tvswan.py">tvswan.py</a></li>
+</ul>
+<p>プログラムは、MIT ライセンスで公開します（作者：BW）。自由に使い、直し、配ることができます。無保証です。全文は <a href="assets/tvswan-rgb/pico/LICENSE.txt">LICENSE.txt</a> にあります。</p>
+<p>確認した環境は、Raspberry Pi Pico（RP2040）と MicroPython v1.29.0 です。Pico の LED は、RGB に切り替えたあとに点灯し、書き込みに失敗しているあいだは、速く点滅します。</p>
+<h3>同期信号について</h3>
+<p>RGB では、同期信号を別に用意する必要があります。方法は2つあります。</p>
+<ul>
+<li><strong>緑に重ねる（CR0 のビット6）</strong>：追加の配線が要りません。この記事では、こちらを使っています。</li>
+<li><strong>専用の出力（11番ピン CSYNC）を引き出す</strong>：基板の R41 から取れます。RetroTINK 4K では、この信号でも同期できました。</li>
+</ul>
+<h3>作業後の確かめ方</h3>
+<p>映像を見る前に、次の順で確かめると、原因の切り分けが楽になります。</p>
+<p><strong>電源を切った状態で（テスターの抵抗レンジ）</strong></p>
+<div class="table"><table>
+<thead>
+<tr>
+<th>測る場所</th>
+<th>正しい値</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>入れ替えた 470Ω の両端</td>
+<td>約 470Ω</td>
+</tr>
+<tr>
+<td>SDA と SCL のあいだ（②と③）</td>
+<td>約 8.4kΩ（筆者の基板での実測）</td>
+</tr>
+<tr>
+<td>SCL（②）と、CSYNC（④）</td>
+<td>つながっていない</td>
+</tr>
+</tbody>
+</table></div>
+<p>SDA と SCL のあいだが、数百Ωしかない場合は、はんだの橋か、焦げ跡による漏れがあります。</p>
+<p><strong>電源を入れた状態で</strong></p>
+<ol>
+<li>Pico をつながずに、TVスワンを起動する。<strong>今までどおり、S端子で映ること。</strong> 映らない、または白黒になる場合は、R40 のまわりの作業を見直します（基板の初期設定が、エンコーダーに届いていません）。</li>
+<li>②（SCL）と、R40 の右のパッドの電圧を測る。<strong>どちらも約 3.3V</strong> なら正常です。②だけ低い場合は、②の側で漏れています。</li>
+<li>Pico をつなぎ、先に Pico に電源を入れてから、TVスワンを起動する。数秒後に Pico の LED が点灯すれば、書き込みは成功です。</li>
+<li>LED が速く点滅する場合は、エンコーダーが応答していません。線の接続と、1・2 を確かめます。</li>
+</ol>
+<p><strong>設定値を確かめたい場合</strong></p>
+<p>I2C の通信を記録できる道具（ロジックアナライザーなど）があれば、起動時に、2 章の表の4つの値が流れることを確かめられます。ほかの版の基板では、値が違うかもしれません。<strong>RGB に切り替える値は、「その基板が書いている MR1 の値に、0x10 を足した物」</strong>です。</p>
+<h2>6. 一番の難所：そのままでは真っ暗に映る</h2>
+<p>RGB に切り替えただけでは、絵がほとんど真っ黒になり、文字の輪郭だけが、うっすら見える状態になりました。</p>
+<p>原因は、信号の形にありました。1ライン（63.56 マイクロ秒）の波形を実測した結果です。同期の始まりを 0 とします。</p>
+<div class="table"><table>
+<thead>
+<tr>
+<th>区間</th>
+<th>S端子・コンポジット出力</th>
+<th>RGB 出力</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>同期パルス</td>
+<td>0 〜 4.5</td>
+<td>0 〜 4.5</td>
+</tr>
+<tr>
+<td>同期のあとの黒（バックポーチ）</td>
+<td>4.5 〜 9.4（約 4.9）</td>
+<td><strong>4.5 〜 5.0（約 0.5）</strong></td>
+</tr>
+<tr>
+<td>絵の始まり</td>
+<td>9.4 から</td>
+<td><strong>5.5 から</strong></td>
+</tr>
+</tbody>
+</table></div>
+<p>TVスワンの絵は、白い外枠（WonderSwan Color のロゴ入り）が、ラインの端から端まであります。S端子やコンポジットでは、エンコーダーが規格どおりの幅で前後を黒く切り取りますが、<strong>RGB 出力では、その切り取りが働かず、同期パルスの直後から白い外枠が出ます。</strong></p>
+<p>映像機器は、同期の直後を「黒」の基準にします。そこが白なので、白を黒と取り違え、絵全体が黒より下に沈みます。</p>
+<p><strong>赤・緑・青の信号そのものは、正常です。</strong> 出力回路の不具合でも、エンコーダーの不具合でもありません。</p>
+<h3>受け側の設定で補う</h3>
+<p>基準のずれ方は一定なので、受け側の設定で打ち消せます。RetroTINK 4K での設定例です。</p>
+<div class="table"><table>
+<thead>
+<tr>
+<th>画面</th>
+<th>項目</th>
+<th>値</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>入力</td>
+<td></td>
+<td>HD-15 の <strong>RGsB</strong></td>
+</tr>
+<tr>
+<td>RGB/Component ADC</td>
+<td>Pre-ADC</td>
+<td>−0.7</td>
+</tr>
+<tr>
+<td></td>
+<td>Gain（R・G・B）</td>
+<td>約 1.9</td>
+</tr>
+<tr>
+<td></td>
+<td>Offset（R・G・B）</td>
+<td><strong>+100</strong></td>
+</tr>
+<tr>
+<td>Color Correction</td>
+<td>Input Lift</td>
+<td>−0.72</td>
+</tr>
+<tr>
+<td></td>
+<td>Input Gain</td>
+<td>3.40</td>
+</tr>
+<tr>
+<td></td>
+<td>Saturation</td>
+<td>+0.20</td>
+</tr>
+<tr>
+<td>Deinterlacer</td>
+<td>Algorithm</td>
+<td>Motion Adaptive</td>
+</tr>
+<tr>
+<td>Scaling/Crop</td>
+<td>Top／Bottom／Left／Right</td>
+<td>−33／−35／−217／−203</td>
+</tr>
+</tbody>
+</table></div>
+<ul>
+<li>Offset を最大にして、沈んだ絵を引き上げ、Color Correction で濃淡を引き伸ばします。</li>
+<li>Pre-ADC を上げすぎると、暗い側が切り捨てられて、面がつぶれます。</li>
+<li>デインターレースを Bob にすると、数秒おきに、絵が1ラインぶん上下に動きました。Motion Adaptive で止まります。</li>
+</ul>
+<p>この方法は、黒レベルを自由に動かせる機器でないと使えません。ほかの機器で試す場合は、同期のあとの約 5 マイクロ秒を黒にする回路を足す、同期信号を約 5 マイクロ秒早める、といった対策が必要になるはずです（どちらも、筆者は試していません）。</p>
+<h2>7. ケーブル</h2>
+<p>S端子と黄色の RCA 端子から、HD15 へつなぎます。</p>
+<div class="table"><table>
+<thead>
+<tr>
+<th>TVスワン側</th>
+<th>信号</th>
+<th>HD15</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>S端子の Y（3番ピン）</td>
+<td>赤</td>
+<td>1番</td>
+</tr>
+<tr>
+<td>黄色の RCA の中心</td>
+<td>緑＋同期</td>
+<td>2番</td>
+</tr>
+<tr>
+<td>S端子の C（4番ピン）</td>
+<td>青</td>
+<td>3番</td>
+</tr>
+<tr>
+<td>各ケーブルのシールド</td>
+<td>GND</td>
+<td>6・7・8番</td>
+</tr>
+</tbody>
+</table></div>
+<p>ネジ止め式の HD15 端子台を使えば、はんだ付けなしで作れます。</p>
+<h2>8. 画質はどう変わるか</h2>
+<p>どの画像も、左が S端子、右が RGB です。2560×1440 で取り込んだ画面の一部を、2倍に拡大しています。</p>
+<figure><img src="assets/tvswan-rgb/cmp-plain-greenhair.png" alt="表示効果なし。緑の髪と肌色の境目、目の描き込みに差が出る" loading="lazy"><figcaption>表示効果なし。緑の髪と肌色の境目、目の描き込みに差が出る</figcaption></figure>
+<figure><img src="assets/tvswan-rgb/cmp-lcd-characters.png" alt="液晶風の表示効果あり。小さなキャラクターの色の境目" loading="lazy"><figcaption>液晶風の表示効果あり。小さなキャラクターの色の境目</figcaption></figure>
+<figure><img src="assets/tvswan-rgb/cmp-plain-label.png" alt="白黒の文字は、差が小さい" loading="lazy"><figcaption>白黒の文字は、差が小さい</figcaption></figure>
+<div class="table"><table>
+<thead>
+<tr>
+<th>見る所</th>
+<th>S端子</th>
+<th>RGB</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ドットの輪郭</td>
+<td>角が丸く、にじむ</td>
+<td>1ドットずつ、角が立つ</td>
+</tr>
+<tr>
+<td>色の境目</td>
+<td>隣の色に引きずられる</td>
+<td>きっぱり分かれる</td>
+</tr>
+<tr>
+<td>白黒の文字の輪郭</td>
+<td>ほぼ同じ</td>
+<td>ほぼ同じ</td>
+</tr>
+</tbody>
+</table></div>
+<p>S端子は、明るさの信号はもともと細かく通します。弱いのは色だけです。そのため、差が出るのは、色と色が接する所です。液晶の画素を再現する効果（RetroTINK 4K の LCD Mono など）を入れると、ドットが格子にきちんと収まるぶん、差が大きく見えます。</p>
+<p>期待しすぎないほうが良い点もあります。</p>
+<ul>
+<li>TVスワンの中で、絵が一度なめらかにされてから出てくるので、エミュレーターのような硬い輪郭にはなりません。</li>
+<li>黒レベルを受け側で補っているぶん、使える明るさの段階は少なめです。</li>
+<li>75Hz→60Hz の変換による動きの乱れは、変わりません。</li>
+</ul>
+<h2>9. まだ分かっていないこと・これから書き足すこと</h2>
+<ul>
+<li>
+<p><strong>Pico を本体に組み込む方法</strong>（電源を基板から取る、S端子と RGB を切り替えるボタンを付ける）。今は、Pico を USB の電源で動かして確かめた段階です。組み込みを終えたら、実際の配線と写真で書き足します。</p>
+</li>
+<li>
+<p>ほかの基板の版で、同じ値・同じ場所が使えるか</p>
+</li>
+<li>RetroTINK 4K 以外の機器での映り方</li>
+<li>エンコーダーの BLANK 入力（14番ピン）を外から動かして、RGB 出力の帰線期間を黒にできるか</li>
+<li>デインターレースを Bob にしたときに、絵が上下に動く原因</li>
+</ul>
+<hr />
+<h2>付録：解析に使った方法</h2>
+<ul>
+<li><strong>I2C の記録</strong>：Pico の GPIO を高速に読み、線の変化を記録して、パソコンで解読しました。</li>
+<li><strong>波形の測定</strong>：Pico の ADC を 2 マイクロ秒おきに連続で読み、ライン周期で重ね合わせて、1ラインの波形を復元しました。オシロスコープがなくても、同期や黒レベルの位置が分かります。</li>
+<li><strong>データシート</strong>：OKI MSM7654（1999 年版）。</li>
+</ul>
+</main>
+<footer>© BW</footer>
+</body>
+</html>

@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TVスワンを RGB で映す（はじめての人向けの案内） | BW の倉庫</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header><a href="index.html">BW の倉庫</a></header>
+<main>
+<h1>TVスワンを RGB で映す（はじめての人向けの案内）</h1>
+<figure><img src="assets/tvswan-rgb/cmp-lcd-greenhair.png" alt="左が S端子、右が RGB。画面の一部を拡大したもの" loading="lazy"><figcaption>左が S端子、右が RGB。画面の一部を拡大したもの</figcaption></figure>
+<p>バンダイの TVスワンを、RGB という方式で映せるようにしました。このページは、「何ができるのか」「何が必要なのか」を、できるだけやさしくまとめた案内です。</p>
+<p>作業の手順や、細かい数字は、<a href="tvswan-rgb.html">詳しい記録</a>に書いてあります。</p>
+<h2>TVスワンで、もっときれいに映したい</h2>
+<p>TVスワンは、ワンダースワンカラーのゲームを、テレビに映すための機械です。テレビとは、黄色い線（コンポジット）か、S端子の線でつなぎます。</p>
+<p>S端子でも、十分きれいに映ります。ただ、よく見ると、<strong>色と色の境目が、少しにじんでいます。</strong> 赤い服と青い背景が接する所や、小さなキャラクターの輪郭などです。</p>
+<p>これは、S端子という方式の性質です。S端子は、「明るさ」と「色」を分けて送ります。明るさは細かく送れますが、色は、大まかにしか送れません。そのため、色の境目がぼやけます。</p>
+<h2>RGB という送り方</h2>
+<p>映像を送る方法には、もう一つ、<strong>RGB</strong> があります。赤・緑・青の3つの色を、別々の線で、そのまま送る方法です。色を大まかにまとめないので、境目がにじみません。</p>
+<p>TVスワンには、RGB の端子はありません。ところが、中に入っている部品を調べると、<strong>RGB で出す機能を、もともと持っている</strong>ことが分かりました。使われていないだけだったのです。</p>
+<h2>どうやって切り替えるのか</h2>
+<p>TVスワンは、電源を入れると、中の部品に「S端子で出しなさい」という指示を送ります。この指示を、あとから「RGB で出しなさい」に書き換えれば、RGB の映像が出てきます。</p>
+<p>書き換えには、<strong>指先に乗るほどの小さなコンピューター</strong>（Raspberry Pi Pico、千円ほど）を使います。これを TVスワンの基板に、3本の線でつなぎます。電源を入れると、数秒後に、自動で RGB に切り替わります。</p>
+<p>映像は、<strong>今ある S端子と黄色の端子から、そのまま出てきます。</strong> 端子を増やす必要はありません。Pico を外せば、元の TVスワンに戻ります。</p>
+<h2>どのくらい変わるのか</h2>
+<p>どの画像も、左が S端子、右が RGB です。画面の一部を、2倍に拡大しています。</p>
+<figure><img src="assets/tvswan-rgb/cmp-plain-greenhair.png" alt="緑の髪と肌色の境目、目の描き込みに差が出る" loading="lazy"><figcaption>緑の髪と肌色の境目、目の描き込みに差が出る</figcaption></figure>
+<figure><img src="assets/tvswan-rgb/cmp-lcd-characters.png" alt="小さなキャラクター。液晶の画素を再現する表示効果を入れた状態" loading="lazy"><figcaption>小さなキャラクター。液晶の画素を再現する表示効果を入れた状態</figcaption></figure>
+<figure><img src="assets/tvswan-rgb/cmp-plain-label.png" alt="白と黒の文字は、ほとんど変わらない" loading="lazy"><figcaption>白と黒の文字は、ほとんど変わらない</figcaption></figure>
+<p>変わるのは、<strong>色の境目</strong>です。ドットの一つ一つが、はっきり分かれて見えるようになります。一方、白と黒の文字の輪郭は、S端子でも十分にくっきりしていて、ほとんど変わりません。</p>
+<h2>必要な物</h2>
+<div class="table"><table>
+<thead>
+<tr>
+<th>物</th>
+<th>目安</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Raspberry Pi Pico</td>
+<td>千円ほど</td>
+</tr>
+<tr>
+<td>抵抗、細い線などの小さな部品</td>
+<td>数百円</td>
+</tr>
+<tr>
+<td>RGB 用のケーブル（自作するか、作ってもらう）</td>
+<td>部品だけなら 2,000 円ほど</td>
+</tr>
+<tr>
+<td>はんだごてなどの道具</td>
+<td>持っていなければ、別に必要</td>
+</tr>
+<tr>
+<td><strong>RetroTINK 4K</strong>（映す側の機械）</td>
+<td>下の「先に知っておいてほしいこと」を読んでください</td>
+</tr>
+</tbody>
+</table></div>
+<h2>先に知っておいてほしいこと</h2>
+<p><strong>はんだ付けが必要です。</strong>
+基板の、米粒より小さな部品を1個、付け替えます。そのほかに、線を3本つなぎます。慣れていない場合は、詳しい人や、改造を請け負う所に頼むのが安全です。頼むときは、<a href="tvswan-rgb.html">詳しい記録</a>のページを見てもらってください。</p>
+<p><strong>映す側の機械を選びます。</strong>
+この方法で出てくる映像には、少し癖があります。そのまま映すと、画面がとても暗くなります。私は、RetroTINK 4K という機械の設定で、その癖を打ち消しています。ほかの機械（ほかのアップスケーラーや、RGB 対応のモニターなど）では、暗く映るかもしれません。ほかの機械では、確かめていません。</p>
+<p><strong>劇的には変わりません。</strong>
+S端子の時点で、TVスワンはかなりきれいに映ります。RGB にして変わるのは、色の境目の鮮やかさです。大きな画面で、ドット絵を細かく見たい人には意味がありますが、「別物になる」ほどの変化ではありません。</p>
+<p><strong>貴重な機械です。</strong>
+TVスワンは、数の少ない機械です。改造は、自己責任でお願いします。私が確かめたのは、手元の1台だけです。</p>
+<h2>もっと詳しく</h2>
+<ul>
+<li><a href="tvswan-rgb.html">詳しい記録（仕様、手順、測定値、プログラム）</a></li>
+<li><a href="tvswan-about.html">TVスワンとは（機種・端子・中身・知られている不具合）</a></li>
+</ul>
+<p>分からない所や、試してみた結果があれば、ぜひ教えてください（X：<a href="https://x.com/TEMJISO">@TEMJISO</a>）。</p>
+</main>
+<footer>© BW</footer>
+</body>
+</html>

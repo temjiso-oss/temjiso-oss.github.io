@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="BW が作った Windows 用ツール、ワンダースワン用パッチ、TVスワンなどの解説記事の入口です。">
+<meta name="referrer" content="no-referrer">
+<title>BW の倉庫</title>
+<style>
+  :root {
+    --bg: #f7f7f5; --card: #ffffff; --text: #1d1d1f; --sub: #5f6368; --line: #dcdcd8;
+    --link: #0b57d0; --ok-bg: #e3f1e6; --ok-text: #1e5e2e; --wait-bg: #ececec; --wait-text: #5f6368;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #17181a; --card: #222326; --text: #ececec; --sub: #a8abb0; --line: #36383c;
+      --link: #8ab4f8; --ok-bg: #1f3a26; --ok-text: #a6dcb2; --wait-bg: #333539; --wait-text: #b4b7bc;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: system-ui, -apple-system, "Segoe UI", "Hiragino Sans", "Yu Gothic UI", "Meiryo", sans-serif;
+    line-height: 1.7; font-size: 16px; -webkit-text-size-adjust: 100%;
+  }
+  main { max-width: 640px; margin: 0 auto; padding: 24px 16px 48px; }
+  h1 { font-size: 1.5rem; margin: 8px 0 4px; }
+  .lead { color: var(--sub); margin: 0 0 24px; font-size: 0.95rem; }
+  h2 { font-size: 1.05rem; margin: 32px 0 10px; padding-bottom: 4px; border-bottom: 1px solid var(--line); }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; margin: 0 0 12px; }
+  .card h3 { font-size: 1rem; margin: 0 0 4px; display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; }
+  .card p { margin: 4px 0; font-size: 0.93rem; }
+  .note { color: var(--sub); font-size: 0.85rem; }
+  .badge { font-size: 0.75rem; font-weight: 600; padding: 1px 8px; border-radius: 999px; white-space: nowrap; }
+  .ok { background: var(--ok-bg); color: var(--ok-text); }
+  .wait { background: var(--wait-bg); color: var(--wait-text); }
+  .card.pending { border-style: dashed; }
+  .card.pending h3 { color: var(--sub); }
+  ul.links { list-style: none; padding: 0; margin: 8px 0 0; display: flex; flex-wrap: wrap; gap: 8px; }
+  ul.links a {
+    display: inline-block; padding: 8px 14px; border: 1px solid var(--line); border-radius: 8px;
+    color: var(--link); text-decoration: none; font-size: 0.93rem; min-height: 44px; line-height: 26px;
+  }
+  ul.links a:hover, ul.links a:focus { border-color: var(--link); text-decoration: underline; }
+  a { color: var(--link); overflow-wrap: anywhere; }
+  .shot { display: block; width: 100%; max-height: 300px; object-fit: contain; margin: 10px 0 8px; border-radius: 6px; background: var(--bg); }
+  .author { display: flex; align-items: center; gap: 14px; }
+  .author img { width: 72px; height: 72px; border-radius: 50%; flex: none; }
+  footer { margin-top: 40px; color: var(--sub); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<main>
+  <h1>BW の倉庫</h1>
+  <p class="lead">作ったツールやパッチ、調べた事の置き場です。</p>
+
+  <h2>ツール（Windows 用・無料）</h2>
+
+  <section class="card">
+    <h3>Video Converter for X <span class="badge ok">公開中</span></h3>
+    <img class="shot" src="assets/top/video-converter-for-x.png" alt="Video Converter for X の画面" loading="lazy">
+    <p>動画を X（旧 Twitter）に投稿しやすい MP4 に変換するアプリです。長い動画の分割、HDR の色直し、簡単な切り貼りとフェードもできます。</p>
+    <p class="note">非公式のツールです。X Corp. とは関係ありません。「X」「Twitter」は X Corp. の商標です。</p>
+    <ul class="links">
+      <li><a href="https://github.com/temjiso-oss/video-converter-for-x/releases/tag/v1.1.0">ダウンロード（v1.1.0）</a></li>
+      <li><a href="https://github.com/temjiso-oss/video-converter-for-x">説明とソース（GitHub）</a></li>
+    </ul>
+  </section>
+
+  <!-- WS Video ROM Maker：第2リポジトリを公開したら、下の section を「公開中」の形
+       （class="card"、badge ok、ul.links に Release とリポジトリの2つのリンク）に置き換える。
+       公開前はリンクを置かない。 -->
+  <section class="card">
+    <h3>WS Video ROM Maker <span class="badge ok">公開中</span></h3>
+    <img class="shot" src="assets/top/ws-video-rom-maker.png" alt="WS Video ROM Maker の画面" loading="lazy">
+    <p>動画を、ワンダースワンカラー／スワンクリスタルの実機で再生できる形に変換するアプリです。</p>
+    <p class="note">再生には、nileswan などのフラッシュカートリッジが必要です。非公式のツールです。株式会社バンダイ、nileswan の開発者とは関係ありません。</p>
+    <ul class="links">
+      <li><a href="https://github.com/temjiso-oss/ws-video-rom-maker/releases/tag/v1.2.0">ダウンロード（v1.2.0）</a></li>
+      <li><a href="https://github.com/temjiso-oss/ws-video-rom-maker">説明とソース（GitHub）</a></li>
+    </ul>
+  </section>
+
+  <h2>解説・記事</h2>
+
+  <!-- 記事のページは projects\temjiso-site で作る（tvswan-rgb-guide.html、tvswan-rgb.html、style.css、assets\）。
+       このページと同じ場所に置く。記事を足すときは、下の section を写して、リンク先と文を変える。 -->
+  <section class="card">
+    <h3>TVスワンを RGB で映す <span class="badge ok">公開中</span></h3>
+    <img class="shot" src="assets/top/tvswan-rgb.png" alt="S端子と RGB の画質の比較" loading="lazy">
+    <p>バンダイの TVスワン（ワンダースワンカラーをテレビに映す機器）を、RGB 出力にした記録です。S端子との画質の比較、必要な物、基板の改造、つまずいた所をまとめています。</p>
+    <p class="note">貴重な機器の改造です。試すときは自己責任でお願いします。映す側の機器を選びます（記事の中で説明しています）。</p>
+    <ul class="links">
+      <li><a href="tvswan-rgb-guide.html">はじめての人向けの案内</a></li>
+      <li><a href="tvswan-rgb.html">詳しい記録（仕様・手順・プログラム）</a></li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h3>TVスワンとは <span class="badge ok">公開中</span></h3>
+    <p>店頭の試遊台などに使われた TVスワンについて、機種のバリエーション、端子と付属品、基板の中身、知られている不具合をまとめたページです。</p>
+    <p class="note">写真と図は準備中です。順に足していきます。</p>
+    <ul class="links">
+      <li><a href="tvswan-about.html">TVスワンとは</a></li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h3>RetroTINK 4K の覚え書き <span class="badge ok">公開中</span></h3>
+    <img class="shot" src="assets/rt4k/samples-1560-vs-1716.png" alt="取り込みの設定を変える前と後の、ドットの境目の比較" loading="lazy">
+    <p>RetroTINK 4K の設定で、つまずいた所と、分かった事をまとめたページです。保存の落とし穴、倍率の決め方、明るさの合わせ方などを、日本語で書いています。TVスワン用の設定例も載せています。</p>
+    <p class="note">ファームウェア 1.99.19 で試した内容です。版が変わると、項目の名前や動きが変わる事があります。</p>
+    <ul class="links">
+      <li><a href="rt4k-notes.html">RetroTINK 4K の覚え書き</a></li>
+    </ul>
+  </section>
+
+  <h2>ワンダースワン用パッチ</h2>
+  <p class="note">どれも「差分パッチ」だけの配布です。ゲーム本体（ROM）や音楽データは含まれていません。ご自身で持っているものに当てて使います。</p>
+
+  <!-- 半熟英雄パッチ：Release を作ったら class="card"・badge ok にし、ul.links を足す。 -->
+  <section class="card">
+    <h3>半熟英雄（ワンダースワンカラー版）メニュー画面のちらつき修正 <span class="badge ok">公開中</span></h3>
+    <img class="shot" src="assets/top/hanjuku-hero.png" alt="パッチを当てたあとの半熟英雄のメニュー画面" loading="lazy">
+    <p>メニュー画面の激しい点滅をなくす差分パッチです。スワンクリスタル、TVスワン、HDMI 出力に改造した本体など、点滅が目立つ環境向けです。</p>
+    <p class="note">TVスワン、スワンクリスタル、WSC HD で確認しています。</p>
+    <ul class="links">
+      <li><a href="https://github.com/temjiso-oss/wonderswan-patches/tree/main/hanjuku-hero">説明とダウンロード</a></li>
+      <li><a href="https://github.com/temjiso-oss/wonderswan-patches/blob/main/how-to-patch.md">パッチとは・当て方</a></li>
+    </ul>
+  </section>
+
+  <!-- Riviera パッチ：同上。 -->
+  <section class="card">
+    <h3>約束の地リヴィエラ（ワンダースワンカラー版）nileswan 用 BGM パッチ <span class="badge ok">公開中</span></h3>
+    <img class="shot" src="assets/top/riviera-sd-music.png" alt="リヴィエラのサウンドモードの画面" loading="lazy">
+    <p>nileswan（フラッシュカートリッジ）の microSD に置いた曲を、ゲームの BGM として流せるようにする差分パッチです。パッチ当てと曲のファイル作りをまとめて行える、Windows 用のツールもあります。</p>
+    <p class="note">nileswan 専用です。曲のデータは含みません。ご自身で用意した音声を使います。</p>
+    <ul class="links">
+      <li><a href="https://github.com/temjiso-oss/wonderswan-patches/tree/main/riviera-nileswan-sd-music">説明とダウンロード</a></li>
+      <li><a href="https://github.com/temjiso-oss/wonderswan-patches/releases/tag/riviera-sd-music-v1.4.1">ツール（v1.4.1）</a></li>
+      <li><a href="https://github.com/temjiso-oss/wonderswan-patches/blob/main/how-to-patch.md">パッチとは・当て方</a></li>
+    </ul>
+  </section>
+
+  <h2>作者について</h2>
+  <section class="card">
+    <div class="author">
+      <img src="assets/top/bw-icon.png" alt="BW のアイコン" width="72" height="72">
+      <p>BW。札幌市在住のレトロゲーム好き。</p>
+    </div>
+    <ul class="links">
+      <li><a href="https://x.com/TEMJISO">X（@TEMJISO）</a></li>
+      <li><a href="https://github.com/temjiso-oss">GitHub（temjiso-oss）</a></li>
+    </ul>
+  </section>
+
+  <footer>
+    <p>このページは索引です。ツールとパッチのファイルは、ここには置いていません。各ツールの利用条件はそれぞれの GitHub のページを見てください。記事に付属する小さなプログラムは、記事のページから入手できます。</p>
+  </footer>
+</main>
+</body>
+</html>
